@@ -1,0 +1,234 @@
+ls
+cd ..
+cd ~
+clear
+ls /proc
+echo $$
+cat /proc/$$/status | head -n 10
+cat /proc/self/status | head -n 10
+python3 -c "import os, time; pid = os.fork(); exit() if pid == 0 else (print('Zombie PID is:', pid), time.sleep(40))" &
+cat /proc/1090/status | head -n 10
+ps aux | grep -i 'defunct'
+lspci
+cd ..
+cd..
+cd ..
+cd ~
+lspci
+iostat -xz 1 10
+iostat -xz 1
+sudo apt update
+sudo apt install -y pciutils usbutils util-linux
+lsblk -e 7 -o NAME,MAJ:MIN,RM,SIZE,RO,TYPE,MOUNTPOINTS
+lsusb -t
+lspci -k
+sudo apt install -y sysstat
+dd if=/dev/zero of=test_io.img bs=1M count=1024 oflag=direct status=progress
+rm -f test_io.img
+dd if=/dev/zero of=test_io.img bs=1M count=4096 oflag=direct status=progress
+sudo apt update
+sudo apt install -y python3 python3-pip
+pip3 install matplotlib
+lsblk
+cat /sys/block/sdb/queue/scheduler
+echo none | sudo tee /sys/block/sdb/queue/scheduler
+fio --name=ssd_test --filename=$HOME/fio_ssd.img --size=1G --direct=1 --iodepth=32 --rw=randread --bs=4k --runtime=20 --time_based
+sudo apt install fio
+fio --name=ssd_test --filename=$HOME/fio_ssd.img --size=1G --direct=1 --iodepth=32 --rw=randread --bs=4k --runtime=20 --time_based
+sudo apt install -y libaio-dev
+sudo apt update && sudo apt install -y fio libaio-dev python3 python3-pip
+cat /sys/block/sdd/queue/scheduler
+nano run_ssd.sh
+chmod +x run_ssd.sh
+./run_ssd.sh
+cat /sys/block/sdb/queue/scheduler
+sudo apt update && sudo apt install -y fio jq
+# On the Lenovo SSD:
+chmod +x run_benchmark.sh
+sudo ./run_benchmark.sh
+# On the HP HDD:
+chmod +x run_benchmark.sh
+./run_benchmark.sh
+sudo apt update && sudo apt install -y fio jq
+cat << 'EOF' > run_benchmark.sh
+#!/usr/bin/env bash
+set -e
+
+if [ -d "/sys/block/sdb" ]; then
+    DEV="sdb"
+elif [ -d "/sys/block/sda" ]; then
+    DEV="sda"
+else
+    echo "No block device found."
+    exit 1
+fi
+
+SCHEDULERS=("none" "mq-deadline" "kyber")
+TEST_FILE="./test_payload.bin"
+FILE_SIZE="1G"
+RUNTIME=30
+
+echo "=========================================================="
+echo " Running on Host: $(hostname) | Device: /dev/$DEV"
+echo " Workload: Mixed 70% Read / 30% Write (4KB)"
+echo "=========================================================="
+
+for SCHED in "${SCHEDULERS[@]}"; do
+    echo ""
+    echo "[+] Testing Scheduler: $SCHED"
+    echo "$SCHED" | sudo tee /sys/block/$DEV/queue/scheduler > /dev/null
+    echo "    Active: $(cat /sys/block/$DEV/queue/scheduler)"
+    
+    sync
+    echo 3 | sudo tee /proc/sys/vm/drop_caches > /dev/null
+
+    echo "    Executing fio (Runtime: ${RUNTIME}s)..."
+    fio --name="bench_${SCHED}" \
+        --filename="$TEST_FILE" \
+        --size="$FILE_SIZE" \
+        --rw=randrw \
+        --rwmixread=70 \
+        --bs=4k \
+        --ioengine=libaio \
+        --iodepth=16 \
+        --direct=1 \
+        --runtime="$RUNTIME" \
+        --time_based \
+        --group_reporting \
+        --output-format=json \
+        --output="result_${SCHED}.json"
+
+    rm -f "$TEST_FILE"
+    sleep 2
+done
+
+echo ""
+echo "==================== FINAL BENCHMARK RESULTS ===================="
+printf "%-14s | %-12s | %-12s | %-14s | %-14s\n" "Scheduler" "Read IOPS" "Write IOPS" "Read Lat (ms)" "Write Lat (ms)"
+echo "----------------------------------------------------------------------------------"
+
+for SCHED in "${SCHEDULERS[@]}"; do
+    FILE="result_${SCHED}.json"
+    if [ -f "$FILE" ]; then
+        R_IOPS=$(jq '.jobs[0].read.iops' "$FILE")
+        W_IOPS=$(jq '.jobs[0].write.iops' "$FILE")
+        R_LAT=$(jq '.jobs[0].read.lat_ns.mean / 1000000' "$FILE")
+        W_LAT=$(jq '.jobs[0].write.lat_ns.mean / 1000000' "$FILE")
+        printf "%-14s | %-12.2f | %-12.2f | %-14.3f | %-14.3f\n" "$SCHED" "$R_IOPS" "$W_IOPS" "$R_LAT" "$W_LAT"
+    fi
+done
+echo "=================================================================="
+EOF
+
+chmod +x run_benchmark.sh
+sudo ./run_benchmark.sh
+for s in none mq-deadline kyber; do     echo -n "$s: ";     jq -r '[.jobs[0].read.clat_ns.percentile["95.000000"] / 1000000, .jobs[0].read.clat_ns.percentile["99.000000"] / 1000000] | @tsv' "result_${s}.json"; done
+gcc -O3 ipc_bench.c -o ipc_bench
+./ipc_bench
+gcc -O3 ipc_bench.c -o ipc_bench
+./ipc_bench
+gcc -O3 ipc_bench.c -o ipc_bench -lpthread -lrt
+./ipc_bench > results.csv
+gcc -O3 ipc_bench.c -o ipc_bench -lpthread -lrt
+./ipc_bench > results.csv
+nproc
+mkdir -p ~/ipc_project
+cd ~/ipc_project
+code .
+cat results.csv
+gcc -O3 ipc_throughput.c -o ipc_throughput -lpthread -lrt
+./ipc_throughput > throughput_results.csv
+publication ready? 
+isn't gonna be revealed as an AI generated and my professor probabaly is gonna discover that and reject it 
+sudo apt-get update
+sudo apt-get install -y texlive-latex-base texlive-latex-extra texlive-fonts-recommended texlive-science
+python3 -c "
+import pandas as pd, matplotlib.pyplot as plt
+
+# Latency plot
+df_lat = pd.read_csv('results.csv') if __import__('os').path.exists('results.csv') else None
+"
+sudo apt update && sudo apt install -y python3-pandas python3-matplotlib
+python3 generate_figures.py
+pdflatex paper.tex
+explorer.exe .
+wget -O IEEEtran.cls https://mirrors.ctan.org/macros/latex/contrib/IEEEtran/IEEEtran.cls
+pdflatex paper.tex
+explorer.exe .
+pdflatex paper.tex
+explorer.exe .
+wget -O IEEEtran.cls https://mirrors.ctan.org/macros/latex/contrib/IEEEtran/IEEEtran.cls
+pdflatex rr_quantum_optimization_ieee.tex
+bibtex rr_quantum_optimization_ieee
+pdflatex rr_quantum_optimization_ieee.tex
+explorer.exe .
+pdflatex rr_quantum_optimization_ieee.tex
+explorer.exe .
+pdflatex rr_quantum_optimization_ieee.tex
+explorer.exe .
+pdflatex rr_quantum_optimization_ieee.tex
+explorer.exe .
+pdflatex rr_quantum_optimization_ieee.tex
+explorer.exe .
+uname -r
+lscpu | grep "Model name"
+sudo cpupower frequency-set -g performance
+sudo apt update
+sudo apt install -y linux-tools-common linux-tools-generic linux-tools-$(uname -r)
+sudo apt install -y cpufrequtils
+which cpupower
+sudo cpupower frequency-set -g performance
+sudo cpufreq-set -r -g performance
+lscpu > cpu_info.txt
+getconf LEVEL1_DCACHE_LINESIZE >> cpu_info.txt
+cat cpu_info.txt
+nano benchmark.c
+head -n 10 benchmark.c
+gcc -O3 -pthread benchmark.c -o benchmark
+./benchmark 0 2 10000000
+nproc
+nano run_benchmarks.py
+head -n 5 run_benchmarks.py
+python3 run_benchmarks.py
+head -n 10 results.csv
+sudo apt install -y python3-matplotlib python3-pandas
+nano plot_results.py
+python3 plot_results.py
+explorer.exe .
+mkdir -p mutual_exclusion_study
+mv benchmark.c run_benchmarks.py plot_results.py results.csv cpu_info.txt figure1_scaling_curves.png figure2_false_sharing.png mutual_exclusion_study/
+cd mutual_exclusion_study
+git init
+cat << 'EOF' > reproduce.sh
+#!/bin/bash
+set -e
+echo "[1/3] Compiling benchmark harness..."
+gcc -O3 -pthread benchmark.c -o benchmark
+echo "[2/3] Executing benchmark matrix (>=7 repetitions)..."
+python3 run_benchmarks.py
+echo "[3/3] Generating publication figures..."
+python3 plot_results.py
+echo "All figures regenerated successfully."
+EOF
+
+chmod +x reproduce.sh
+ls
+python3 -c "import pandas as pd; df = pd.read_csv('results.csv'); print(df.groupby(['strategy_name', 'threads'])['throughput_mops'].median().unstack().to_string())"
+sudo apt update
+sudo apt install -y texlive-latex-base texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended wget
+cd ~/mutual_exclusion_study
+wget -O IEEEtran.cls https://mirrors.ctan.org/macros/latex/contrib/IEEEtran/IEEEtran.cls
+ls -l IEEEtran.cls
+nano paper.tex
+pdflatex paper.tex
+ls -lh paper.pdf
+explorer.exe paper.pdf
+gcc -O3 -pthread benchmark.c -o benchmark
+python3 run_benchmarks.py
+python3 plot_results.py
+pdflatex paper.tex
+python3 -c "import pandas as pd; df = pd.read_csv('results.csv'); print(df.groupby(['strategy_name', 'threads'])['throughput_mops'].median().unstack().round(1).to_string())"
+pdflatex paper.tex
+python3 plot_results.py
+pdflatex paper.tex
+history -a
